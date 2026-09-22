@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T.R.A.C.K. - Timestamp Recording & Automotive Capture Kit</title>
+
+<!-- Font Awesome for Icons/Logos -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --bg-base: #f4f7f9;
+    --panel-bg: rgba(255, 255, 255, 0.85);
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --primary-blue: #2563eb;
+    --glass-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+    --input-bg: #ffffff;
+    --option-bg: #f1f5f9;
+    --option-hover: #e2e8f0;
+    --log-bg: #ffffff;
+    --log-comment-bg: #f8fafc;
+}
+
+/* Dark Mode Variables */
+[data-theme="dark"] {
+    --bg-base: #0f172a;
+    --panel-bg: rgba(30, 41, 59, 0.85);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+    --glass-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+    --input-bg: #1e293b;
+    --option-bg: #1e293b;
+    --option-hover: #334155;
+    --log-bg: #1e293b;
+    --log-comment-bg: #0f172a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 30px 15px;
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--glass-shadow);
+    z-index: 100;
+    transition: all 0.3s ease;
+    font-size: 18px;
+    backdrop-filter: blur(10px);
+}
+.theme-toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* Vibrant Soft Pastel Orbs */
+.bg-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    z-index: -1;
+    animation: float 15s infinite ease-in-out alternate;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+[data-theme="dark"] .bg-orb { opacity: 0.15; }
+.orb-1 { top: -10%; left: -5%; width: 600px; height: 600px; background: #60a5fa; }
+.orb-2 { bottom: -10%; right: -5%; width: 700px; height: 700px; background: #34d399; animation-delay: -5s; }
+.orb-3 { top: 40%; left: 30%; width: 500px; height: 500px; background: #c084fc; animation-delay: -8s; }
+
+@keyframes float {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(50px, 40px) scale(1.1); }
+}
+
+.app-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    align-items: stretch;
+}
+
+.panel {
+    background: var(--panel-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 35px;
+    box-shadow: var(--glass-shadow);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background 0.3s, border-color 0.3s;
+}
+
+.feed-wrapper { position: relative; height: 100%; width: 100%; }
+.feed-panel { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; }
+.panel-header { display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+.panel-title { margin: 0; font-size: 32px; font-weight: 800; display: flex; align-items: center; gap: 12px; color: var(--text-main); letter-spacing: -1px; }
+.panel-subtitle { font-size: 13.5px; color: var(--text-muted); font-weight: 600; margin-top: 4px; margin-left: 46px; letter-spacing: 0.5px; }
+
+.bmw-logo { width: 34px; height: 34px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+[data-theme="dark"] .bmw-logo { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)) invert(1) brightness(2); }
+
+.stats-container { display: flex; gap: 15px; flex-wrap: wrap; }
+.stat-card {
+    color: #ffffff; padding: 16px; border-radius: 16px; font-weight: 700; font-size: 15px;
+    display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); flex: 1; justify-content: center;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 25px rgba(0,0,0,0.15); }
+.stat-str { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+.stat-clamp { background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); }
+.stat-sgr { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+
+.input-group { margin-bottom: 25px; }
+label { display: block; font-weight: 700; font-size: 13px; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.sub-label { width: 100%; font-size: 12px; color: #94a3b8; font-weight: 700; margin-top: 8px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+input[type="text"], select {
+    width: 100%; padding: 15px 20px; border: 2px solid var(--border-color); border-radius: 14px;
+    font-size: 15px; font-weight: 500; font-family: inherit; transition: all 0.3s ease;
+    background: var(--input-bg); color: var(--text-main); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+input[type="text"]::placeholder { color: #94a3b8; }
+input[type="text"]:focus, select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
+
+.selection-group { display: flex; flex-wrap: wrap; gap: 10px; padding-bottom: 5px; }
+.option-btn {
+    background: var(--option-bg); color: var(--text-muted); border: 1px solid var(--border-color); border-radius: 50px; 
+    padding: 10px 18px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px;
+    cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.option-btn:hover { background: var(--option-hover); color: var(--text-main); transform: translateY(-2px); }
+.option-btn.active {
+    background: var(--brand-color); color: #ffffff; border-color: var(--brand-color);
+    box-shadow: 0 8px 20px var(--brand-shadow); transform: translateY(-3px) scale(1.02);
+}
+.option-btn i { font-size: 16px; transition: transform 0.2s; }
+.option-btn.active i { transform: scale(1.1); }
+
+.action-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 40px; padding-top: 30px; border-top: 1px solid var(--border-color); }
+.btn { padding: 16px 20px; border: none; border-radius: 14px; color: white; font-weight: 700; font-size: 14.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s; }
+.btn:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { transform: none; box-shadow: none; cursor: not-allowed; opacity: 0.5; }
+
+.record-btn { grid-column: span 2; background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%); box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3); font-size: 16px; padding: 18px; }
+.export-csv-btn { background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25); }
+.export-html-btn { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 8px 20px rgba(245, 158, 11, 0.25); }
+.clear-btn { grid-column: span 2; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.25); }
+
+.logs-container { flex: 1; min-height: 0; overflow-y: auto; padding-right: 10px; }
+.logs-container::-webkit-scrollbar { width: 8px; }
+.logs-container::-webkit-scrollbar-track { background: var(--option-bg); border-radius: 10px; }
+.logs-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+.logs-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.session-badge { display: inline-flex; align-items: center; gap: 8px; background: #1e293b; color: #ffffff; padding: 8px 18px; border-radius: 50px; font-size: 13px; font-weight: 700; margin: 25px 0 15px 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+.log-card { background: var(--log-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.3s ease; }
+.log-card:hover { transform: translateX(4px); border-color: #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+.log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 13.5px; color: var(--text-muted); }
+.log-seq { font-weight: 800; color: var(--text-main); font-size: 15px; }
+.log-time { font-weight: 600; }
+.log-time i { margin-right: 5px; color: #94a3b8; }
+
+.delete-log-btn { background: transparent; border: none; color: #cbd5e1; cursor: pointer; font-size: 15px; padding: 8px; border-radius: 8px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+.delete-log-btn:hover { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+
+.log-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.tag { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.tag-ecu { background: var(--option-bg); color: var(--text-muted); border: 1px solid var(--border-color); }
+.tag-media { background: rgba(67, 56, 202, 0.1); color: #4338ca; border: 1px solid #c7d2fe; }
+.tag-lifecycle { background: rgba(180, 83, 9, 0.1); color: #b45309; border: 1px solid #fde68a; }
+.tag-profile { background: rgba(126, 34, 206, 0.1); color: #7e22ce; border: 1px solid #e9d5ff; }
+.tag-pin-enabled { background: rgba(22, 101, 52, 0.1); color: #166534; border: 1px solid #bbf7d0; }
+.tag-pin-disabled { background: rgba(153, 27, 27, 0.1); color: #991b1b; border: 1px solid #fecaca; }
+.tag-str { background: rgba(29, 78, 216, 0.1); color: #1d4ed8; border: 1px solid #bfdbfe; }
+.tag-clamp { background: rgba(194, 65, 12, 0.1); color: #c2410c; border: 1px solid #fed7aa; }
+.tag-sgr { background: rgba(4, 120, 87, 0.1); color: #047857; border: 1px solid #a7f3d0; }
+.log-comment { font-size: 14px; color: var(--text-main); background: var(--log-comment-bg); padding: 12px 15px; border-radius: 10px; border: 1px dashed var(--border-color); margin-top: 15px; font-weight: 500; }
+
+[data-theme="dark"] .tag-media { color: #818cf8; border-color: #3730a3; }
+[data-theme="dark"] .tag-lifecycle { color: #fbbf24; border-color: #92400e; }
+[data-theme="dark"] .tag-profile { color: #c084fc; border-color: #6b21a8; }
+[data-theme="dark"] .tag-pin-enabled { color: #4ade80; border-color: #166534; }
+[data-theme="dark"] .tag-pin-disabled { color: #f87171; border-color: #991b1b; }
+[data-theme="dark"] .tag-str { color: #60a5fa; border-color: #1e3a8a; }
+[data-theme="dark"] .tag-clamp { color: #fb923c; border-color: #9a3412; }
+[data-theme="dark"] .tag-sgr { color: #34d399; border-color: #065f46; }
+
+@media (max-width: 1024px) {
+    .app-wrapper { grid-template-columns: 1fr; }
+    .feed-wrapper { height: 800px; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- Theme Toggle Button -->
+<button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+    <i class="fa-solid fa-moon"></i>
+</button>
+
+<div class="bg-orb orb-1"></div>
+<div class="bg-orb orb-2"></div>
+<div class="bg-orb orb-3"></div>
+
+<div class="app-wrapper">
+
+    <!-- LEFT COLUMN: Form Inputs -->
+    <div class="panel" id="inputPanel">
+        <div class="panel-header">
+            <div>
+                <h1 class="panel-title">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/BMW.svg" alt="BMW Logo" class="bmw-logo">
+                    T.R.A.C.K.
+                </h1>
+                <div class="panel-subtitle">Timestamp Recording & Automotive Capture Kit</div>
+            </div>
+            
+            <div class="stats-container">
+                <div class="stat-card stat-str" id="strCounterCard">
+                    <span id="strCounterLabel"><i class="fa-solid fa-clock-rotate-left"></i> STR:</span> <span id="strCounterVal">0</span>
+                </div>
+                <div class="stat-card stat-clamp" id="clampCounterCard">
+                    <i class="fa-solid fa-plug"></i> Clamp: <span id="clampCounterVal">0</span>
+                </div>
+                <div class="stat-card stat-sgr" id="sgrCounterCard">
+                    <i class="fa-solid fa-microchip"></i> SGR: <span id="sgrCounterVal">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>ECU <span style="color: #ef4444;">*</span></label>
+            <div class="selection-group" id="ecuGroup">
+                <button type="button" class="option-btn active" data-value="IDCevo" style="--brand-color: #2563eb; --brand-shadow: rgba(37, 99, 235, 0.4);" onclick="switchECU('IDCevo', this)">
+                    <i class="fa-solid fa-gauge-high"></i> IDCevo
+                </button>
+                <button type="button" class="option-btn" data-value="RSE" style="--brand-color: #8b5cf6; --brand-shadow: rgba(139, 92, 246, 0.4);" onclick="switchECU('RSE', this)">
+                    <i class="fa-solid fa-car-rear"></i> RSE
+                </button>
+                <button type="button" class="option-btn" data-value="CDE" style="--brand-color: #10b981; --brand-shadow: rgba(16, 185, 129, 0.4);" onclick="switchECU('CDE', this)">
+                    <i class="fa-solid fa-display"></i> CDE
+                </button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Software Version <span style="color: #ef4444;">*</span></label>
+            <input type="text" id="softwareVersion" placeholder="Example: 26w36.7-1">
+        </div>
+
+        <div class="input-group">
+            <label>Media Source</label>
+            <div class="selection-group" id="mediaSourceGroup">
+                <!-- IDCevo Specific (Ordered) -->
+                <button type="button" class="option-btn ecu-specific ecu-idcevo" data-value="Apple Car Play" style="--brand-color: #0f172a; --brand-shadow: rgba(15, 23, 42, 0.4);" onclick="selectOption('media', 'Apple Car Play', this)">
+                    <i class="fa-brands fa-apple"></i> Apple Car Play
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-idcevo" data-value="Android Auto" style="--brand-color: #10b981; --brand-shadow: rgba(16, 185, 129, 0.4);" onclick="selectOption('media', 'Android Auto', this)">
+                    <i class="fa-brands fa-android"></i> Android Auto
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-idcevo" data-value="Bluetooth" style="--brand-color: #3b82f6; --brand-shadow: rgba(59, 130, 246, 0.4);" onclick="selectOption('media', 'Bluetooth', this)">
+                    <i class="fa-brands fa-bluetooth-b"></i> Bluetooth
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-idcevo" data-value="Radio" style="--brand-color: #8b5cf6; --brand-shadow: rgba(139, 92, 246, 0.4);" onclick="selectOption('media', 'Radio', this)">
+                    <i class="fa-solid fa-radio"></i> Radio
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-idcevo" data-value="Spotify" style="--brand-color: #1ed760; --brand-shadow: rgba(30, 215, 96, 0.4);" onclick="selectOption('media', 'Spotify', this)">
+                    <i class="fa-brands fa-spotify"></i> Spotify
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-idcevo" data-value="Other 3rd Party App" style="--brand-color: #64748b; --brand-shadow: rgba(100, 116, 139, 0.4);" onclick="selectOption('media', 'Other 3rd Party App', this)">
+                    <i class="fa-solid fa-layer-group"></i> Other App
+                </button>
+
+                <!-- CDE & RSE Specific: Templated Apps -->
+                <div class="sub-label ecu-specific ecu-cde ecu-rse">Templated Apps</div>
+                <button type="button" class="option-btn ecu-specific ecu-cde ecu-rse" data-value="Spotify" style="--brand-color: #1ed760; --brand-shadow: rgba(30, 215, 96, 0.4);" onclick="selectOption('media', 'Spotify', this)">
+                    <i class="fa-brands fa-spotify"></i> Spotify
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-cde ecu-rse" data-value="Amazon Music" style="--brand-color: #00a8e1; --brand-shadow: rgba(0, 168, 225, 0.4);" onclick="selectOption('media', 'Amazon Music', this)">
+                    <i class="fa-brands fa-amazon"></i> Amazon Music
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-cde ecu-rse" data-value="TuneIn Radio" style="--brand-color: #0d9488; --brand-shadow: rgba(13, 148, 136, 0.4);" onclick="selectOption('media', 'TuneIn Radio', this)">
+                    <i class="fa-solid fa-tower-broadcast"></i> TuneIn Radio
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-cde ecu-rse" data-value="Other (Templated)" style="--brand-color: #64748b; --brand-shadow: rgba(100, 116, 139, 0.4);" onclick="selectOption('media', 'Other (Templated)', this)">
+                    <i class="fa-solid fa-layer-group"></i> Others
+                </button>
+
+                <!-- CDE & RSE Specific: Non-templated Apps -->
+                <div class="sub-label ecu-specific ecu-cde ecu-rse">Non-templated Apps</div>
+                <button type="button" class="option-btn ecu-specific ecu-cde ecu-rse" data-value="Youtube" style="--brand-color: #ff0000; --brand-shadow: rgba(255, 0, 0, 0.4);" onclick="selectOption('media', 'Youtube', this)">
+                    <i class="fa-brands fa-youtube"></i> Youtube
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-cde ecu-rse" data-value="TiVo" style="--brand-color: #db2777; --brand-shadow: rgba(219, 39, 119, 0.4);" onclick="selectOption('media', 'TiVo', this)">
+                    <i class="fa-solid fa-tv"></i> TiVo
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-cde ecu-rse" data-value="Airconsole" style="--brand-color: #16a34a; --brand-shadow: rgba(22, 163, 74, 0.4);" onclick="selectOption('media', 'Airconsole', this)">
+                    <i class="fa-solid fa-gamepad"></i> Airconsole
+                </button>
+                <!-- RSE Specific: HDMI -->
+                <button type="button" class="option-btn ecu-specific ecu-rse" data-value="HDMI" style="--brand-color: #475569; --brand-shadow: rgba(71, 85, 105, 0.4);" onclick="selectOption('media', 'HDMI', this)">
+                    <i class="fa-solid fa-desktop"></i> HDMI
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-cde ecu-rse" data-value="Other (Non-templated)" style="--brand-color: #64748b; --brand-shadow: rgba(100, 116, 139, 0.4);" onclick="selectOption('media', 'Other (Non-templated)', this)">
+                    <i class="fa-solid fa-layer-group"></i> Others
+                </button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Lifecycle Type <span style="color: #ef4444;">*</span></label>
+            <div class="selection-group" id="lifecycleTypeGroup">
+                <button type="button" class="option-btn ecu-specific ecu-idcevo ecu-cde ecu-rse" data-value="Flash" style="--brand-color: #f59e0b; --brand-shadow: rgba(245, 158, 11, 0.4);" onclick="selectOption('lifecycle', 'Flash', this)">
+                    <i class="fa-solid fa-bolt"></i> Flash
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-idcevo ecu-cde ecu-rse" data-value="SMAC" style="--brand-color: #d946ef; --brand-shadow: rgba(217, 70, 239, 0.4);" onclick="selectOption('lifecycle', 'SMAC', this)">
+                    <i class="fa-solid fa-gears"></i> SMAC
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-idcevo ecu-cde ecu-rse" data-value="FR" style="--brand-color: #64748b; --brand-shadow: rgba(100, 116, 139, 0.4);" onclick="selectOption('lifecycle', 'FR', this)">
+                    <i class="fa-solid fa-industry"></i> FR
+                </button>
+                <button type="button" id="btn-str" class="option-btn ecu-specific ecu-idcevo ecu-cde" data-value="STR" style="--brand-color: #3b82f6; --brand-shadow: rgba(59, 130, 246, 0.4);" onclick="selectOption('lifecycle', 'STR', this)">
+                    <i class="fa-solid fa-clock-rotate-left"></i> STR
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-rse" data-value="PWF" style="--brand-color: #3b82f6; --brand-shadow: rgba(59, 130, 246, 0.4);" onclick="selectOption('lifecycle', 'PWF', this)">
+                    <i class="fa-solid fa-power-off"></i> PWF
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-idcevo ecu-cde ecu-rse" data-value="SGR" style="--brand-color: #10b981; --brand-shadow: rgba(16, 185, 129, 0.4);" onclick="selectOption('lifecycle', 'SGR', this)">
+                    <i class="fa-solid fa-microchip"></i> SGR
+                </button>   
+                <button type="button" class="option-btn ecu-specific ecu-idcevo ecu-cde ecu-rse" data-value="Clamp" style="--brand-color: #f97316; --brand-shadow: rgba(249, 115, 22, 0.4);" onclick="selectOption('lifecycle', 'Clamp', this)">
+                    <i class="fa-solid fa-plug"></i> Clamp
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-idcevo ecu-cde ecu-rse" data-value="Cancel shutdown" style="--brand-color: #ef4444; --brand-shadow: rgba(239, 68, 68, 0.4);" onclick="selectOption('lifecycle', 'Cancel shutdown', this)">
+                    <i class="fa-solid fa-ban"></i> Cancel
+                </button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Profile</label>
+            <div class="selection-group" id="profileGroup">
+                <button type="button" class="option-btn ecu-specific ecu-idcevo" data-value="Main User" style="--brand-color: #6366f1; --brand-shadow: rgba(99, 102, 241, 0.4);" onclick="selectOption('profile', 'Main User', this)">
+                    <i class="fa-solid fa-user-check"></i> Main User
+                </button>
+                <button type="button" id="btn-secondary-user" class="option-btn ecu-specific ecu-idcevo" data-value="Secondary User" style="--brand-color: #8b5cf6; --brand-shadow: rgba(139, 92, 246, 0.4);" onclick="selectOption('profile', 'Secondary User', this)">
+                    <i class="fa-solid fa-user-group"></i> Secondary User
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-idcevo" data-value="Guest User" style="--brand-color: #64748b; --brand-shadow: rgba(100, 116, 139, 0.4);" onclick="selectOption('profile', 'Guest User', this)">
+                    <i class="fa-solid fa-user-clock"></i> Guest User
+                </button>
+                
+                <button type="button" class="option-btn ecu-specific ecu-cde ecu-rse" data-value="Entertainment" style="--brand-color: #8b5cf6; --brand-shadow: rgba(139, 92, 246, 0.4);" onclick="selectOption('profile', 'Entertainment', this)">
+                    <i class="fa-solid fa-masks-theater"></i> Entertainment
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-cde ecu-rse" data-value="Guest" style="--brand-color: #64748b; --brand-shadow: rgba(100, 116, 139, 0.4);" onclick="selectOption('profile', 'Guest', this)">
+                    <i class="fa-solid fa-user-clock"></i> Guest
+                </button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Google Pin</label>
+            <div class="selection-group" id="googlePinGroup">
+                <button type="button" class="option-btn ecu-specific ecu-idcevo ecu-cde ecu-rse" data-value="Enabled" style="--brand-color: #10b981; --brand-shadow: rgba(16, 185, 129, 0.4);" onclick="selectOption('googlePin', 'Enabled', this)">
+                    <i class="fa-solid fa-lock"></i> Enabled
+                </button>
+                <button type="button" class="option-btn ecu-specific ecu-idcevo ecu-cde ecu-rse" data-value="Disabled" style="--brand-color: #ef4444; --brand-shadow: rgba(239, 68, 68, 0.4);" onclick="selectOption('googlePin', 'Disabled', this)">
+                    <i class="fa-solid fa-lock-open"></i> Disabled
+                </button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Comment</label>
+            <input type="text" id="comment" placeholder="Any additional notes...">
+        </div>
+        
+        <!-- SCRCPY MULTI-RECORDING SECTION WITH DYNAMIC VISIBILITY -->
+        <div class="input-group" style="margin-top: 30px; padding-top: 25px; border-top: 1px dashed var(--border-color);">
+            <label>Scrcpy Recording Displays (AAOS)</label>
+            <div class="selection-group" id="displayGroup">
+                
+                <!-- IDCevo Displays -->
+                <button type="button" class="option-btn display-btn ecu-specific ecu-idcevo" data-value="5" style="--brand-color: #f59e0b; --brand-shadow: rgba(245, 158, 11, 0.4);" onclick="toggleDisplayBtn(this)">
+                    <i class="fa-solid fa-car-side"></i> PHUD-Driver
+                </button>
+                <button type="button" class="option-btn display-btn ecu-specific ecu-idcevo" data-value="4" style="--brand-color: #f59e0b; --brand-shadow: rgba(245, 158, 11, 0.4);" onclick="toggleDisplayBtn(this)">
+                    <i class="fa-solid fa-car"></i> PHUD-Middle
+                </button>
+                <button type="button" class="option-btn display-btn ecu-specific ecu-idcevo" data-value="3" style="--brand-color: #f59e0b; --brand-shadow: rgba(245, 158, 11, 0.4);" onclick="toggleDisplayBtn(this)">
+                    <i class="fa-solid fa-car-side fa-flip-horizontal"></i> PHUD-Passenger
+                </button>
+                <button type="button" class="option-btn display-btn ecu-specific ecu-idcevo" data-value="0" style="--brand-color: #3b82f6; --brand-shadow: rgba(59, 130, 246, 0.4);" onclick="toggleDisplayBtn(this)">
+                    <i class="fa-solid fa-display"></i> CID
+                </button>
+                <button type="button" class="option-btn display-btn ecu-specific ecu-idcevo" data-value="2" style="--brand-color: #10b981; --brand-shadow: rgba(16, 185, 129, 0.4);" onclick="toggleDisplayBtn(this)">
+                    <i class="fa-solid fa-wind"></i> HUD
+                </button>
+
+                <!-- CDE Display -->
+                <button type="button" class="option-btn display-btn ecu-specific ecu-cde" data-value="7" style="--brand-color: #8b5cf6; --brand-shadow: rgba(139, 92, 246, 0.4);" onclick="toggleDisplayBtn(this)">
+                    <i class="fa-solid fa-desktop"></i> CDE Display
+                </button>
+
+                <!-- RSE Display -->
+                <button type="button" class="option-btn display-btn ecu-specific ecu-rse" data-value="8" style="--brand-color: #ec4899; --brand-shadow: rgba(236, 72, 153, 0.4);" onclick="toggleDisplayBtn(this)">
+                    <i class="fa-solid fa-tablet-screen-button"></i> PaDi Display
+                </button>
+
+                <!-- The Select All Button -->
+                <button type="button" class="option-btn" id="selectAllBtn" style="background: var(--option-hover); color: var(--text-main);" onclick="toggleAllDisplays()">
+                    <i class="fa-solid fa-check-double"></i> Select All
+                </button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+                <button class="btn" id="startRecBtn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);" onclick="toggleRecording('start')">
+                    <i class="fa-solid fa-video"></i> Start Rec
+                </button>
+                <button class="btn" id="stopRecBtn" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.25);" onclick="toggleRecording('stop')" disabled>
+                    <i class="fa-solid fa-stop"></i> Stop Rec
+                </button>
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <button class="btn record-btn" onclick="recordTime()">
+                <i class="fa-solid fa-crosshairs"></i> Record Timestamp
+            </button>
+            <button class="btn export-csv-btn" onclick="exportLogs('csv')">
+                <i class="fa-solid fa-file-csv"></i> Export CSV
+            </button>
+            <button class="btn export-html-btn" onclick="exportLogs('html')">
+                <i class="fa-solid fa-file-code"></i> Export HTML
+            </button>
+            <button class="btn clear-btn" onclick="clearLogs()">
+                <i class="fa-solid fa-trash-can"></i> Clear ECU Logs
+            </button>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Log Feed pinned to match Left Panel height -->
+    <div class="feed-wrapper">
+        <div class="panel feed-panel">
+            <div class="panel-header" style="flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 20px; border-bottom: none; padding-bottom: 0;">
+                <h2 class="panel-title" style="font-size: 22px; letter-spacing: 0;">
+                    <i class="fa-solid fa-list-check" style="color: #64748b;"></i> Activity Feed <span id="feedEcuDisplay" style="color: #2563eb; font-size: 18px; margin-left: 10px;">(IDCevo)</span>
+                </h2>
+            </div>
+            <div class="logs-container" id="logs">
+                <!-- Logs dynamically inject here with internal scrollbar -->
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// State Variables
+let currentECU = localStorage.getItem("currentECU") || "IDCevo";
+
+let selectedMediaSource = "";
+let selectedLifecycleType = "";
+let selectedProfile = "";
+let selectedGooglePin = "";
+
+let currentSessionId = "";
+let currentSessionVersion = "";
+let currentSequenceNo = 0;
+let currentSTRCounter = 0;
+let currentClampCounter = 0;
+let currentSGRCounter = 0;
+
+let isRecording = false;
+
+// Initialize app on load
+window.onload = function () {
+    switchECU(currentECU);
+    initTheme();
+};
+
+// Theme Toggle Functionality
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+}
+
+function toggleTheme() {
+    const body = document.documentElement;
+    const currentTheme = body.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    body.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+}
+
+function updateThemeIcon(theme) {
+    const icon = document.querySelector('#themeToggleBtn i');
+    if (theme === 'dark') {
+        icon.classList.remove('fa-moon');
+        icon.classList.add('fa-sun');
+    } else {
+        icon.classList.remove('fa-sun');
+        icon.classList.add('fa-moon');
+    }
+}
+
+// Multi-Screen Scrcpy Recording Functionality
+function toggleDisplayBtn(btnElement) {
+    if (isRecording) return; // Prevent changing selections while recording is active
+    btnElement.classList.toggle('active');
+}
+
+function toggleAllDisplays() {
+    if (isRecording) return;
+    
+    // Only target display buttons that are currently visible for the selected ECU
+    const displayBtns = Array.from(document.querySelectorAll('#displayGroup .display-btn')).filter(btn => btn.style.display !== 'none');
+    
+    const allActive = displayBtns.every(btn => btn.classList.contains('active'));
+    
+    displayBtns.forEach(btn => {
+        if (allActive) {
+            btn.classList.remove('active');
+        } else {
+            btn.classList.add('active');
+        }
+    });
+}
+
+async function toggleRecording(action) {
+    const startBtn = document.getElementById('startRecBtn');
+    const stopBtn = document.getElementById('stopRecBtn');
+    
+    startBtn.disabled = true;
+    stopBtn.disabled = true;
+    startBtn.style.cursor = 'wait';
+    stopBtn.style.cursor = 'wait';
+    startBtn.style.opacity = '0.6';
+    stopBtn.style.opacity = '0.6';
+
+    let payload = {};
+
+    if (action === 'start') {
+        const swVer = document.getElementById("softwareVersion").value.trim();
+        if (!swVer) {
+            alert("Please enter a Software Version. The recordings will be saved in a folder with this name.");
+            startBtn.disabled = false;
+            startBtn.style.cursor = 'pointer';
+            startBtn.style.opacity = '1';
+            return;
+        }
+
+        let selectedDisplays = [];
+        const activeBtns = Array.from(document.querySelectorAll('#displayGroup .display-btn.active')).filter(btn => btn.style.display !== 'none');
+        activeBtns.forEach(btn => {
+            selectedDisplays.push({
+                id: btn.getAttribute('data-value'),
+                name: btn.textContent.trim()
+            });
+        });
+
+        if (selectedDisplays.length === 0) {
+            alert("Please select at least one display to record.");
+            startBtn.disabled = false;
+            startBtn.style.cursor = 'pointer';
+            startBtn.style.opacity = '1';
+            return;
+        }
+        
+        payload = { 
+            ecu: currentECU, 
+            software_version: swVer,
+            displays: selectedDisplays 
+        };
+    }
+
+    try {
+        const response = await fetch(`http://localhost:5000/${action}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            isRecording = (action === 'start');
+            
+            startBtn.disabled = isRecording;
+            stopBtn.disabled = !isRecording;
+            startBtn.style.cursor = isRecording ? 'not-allowed' : 'pointer';
+            stopBtn.style.cursor = !isRecording ? 'not-allowed' : 'pointer';
+            startBtn.style.opacity = isRecording ? '0.6' : '1';
+            stopBtn.style.opacity = !isRecording ? '0.6' : '1';
+            
+            const displayBtns = document.querySelectorAll('#displayGroup .option-btn');
+            displayBtns.forEach(btn => {
+                btn.style.opacity = isRecording ? '0.6' : '1';
+                btn.style.cursor = isRecording ? 'not-allowed' : 'pointer';
+            });
+            
+            if (isRecording) {
+                const numDisplays = payload.displays.length;
+                startBtn.innerHTML = `<i class="fa-solid fa-circle-dot fa-fade" style="color: #ffcccc;"></i> Recording (${numDisplays})...`;
+            } else {
+                startBtn.innerHTML = '<i class="fa-solid fa-video"></i> Start Rec';
+            }
+        } else {
+            alert('Failed to connect to local script. Is TRACK.py running?');
+            startBtn.disabled = false;
+            startBtn.style.cursor = 'pointer';
+            startBtn.style.opacity = '1';
+        }
+    } catch (error) {
+        console.error("Connection error:", error);
+        alert('Make sure you launched the tool using the start_track.bat file.');
+        startBtn.disabled = false;
+        startBtn.style.cursor = 'pointer';
+        startBtn.style.opacity = '1';
+    }
+}
+
+// Lifecycle Logging Logic
+function switchECU(ecuName, btnElement) {
+    if (btnElement && btnElement.classList.contains('active')) return; 
+
+    currentECU = ecuName;
+    localStorage.setItem("currentECU", currentECU);
+    document.getElementById("feedEcuDisplay").innerText = `(${currentECU})`;
+    
+    const ecuButtons = document.getElementById('ecuGroup').getElementsByClassName('option-btn');
+    for (let i = 0; i < ecuButtons.length; i++) ecuButtons[i].classList.remove('active');
+    
+    if (btnElement) {
+        btnElement.classList.add('active');
+    } else {
+        const defaultBtn = document.querySelector(`#ecuGroup .option-btn[data-value="${currentECU}"]`);
+        if (defaultBtn) defaultBtn.classList.add('active');
+    }
+
+    document.querySelectorAll('.ecu-specific').forEach(el => {
+        if (el.classList.contains(`ecu-${currentECU.toLowerCase()}`)) {
+            el.style.display = el.classList.contains('sub-label') ? 'block' : 'flex';
+        } else {
+            el.style.display = 'none';
+        }
+    });
+
+    document.querySelectorAll('#displayGroup .display-btn').forEach(btn => btn.classList.remove('active'));
+
+    loadStateForECU();
+    
+    validateAndClearSelection('mediaSourceGroup', selectedMediaSource, 'savedMediaSource', 'media');
+    validateAndClearSelection('lifecycleTypeGroup', selectedLifecycleType, 'savedLifecycleType', 'lifecycle');
+    validateAndClearSelection('profileGroup', selectedProfile, 'savedProfile', 'profile');
+    validateAndClearSelection('googlePinGroup', selectedGooglePin, 'savedGooglePin', 'googlePin');
+
+    restoreSelectionsForECU();
+    displayLogs();
+    updateCounterDisplays();
+}
+
+function validateAndClearSelection(groupId, selectedValue, storageKey, categoryName) {
+    if (selectedValue) {
+        const btn = document.querySelector(`#${groupId} .option-btn[data-value="${selectedValue}"]`);
+        if (!btn || btn.style.display === 'none') {
+            if (categoryName === 'media') selectedMediaSource = "";
+            else if (categoryName === 'lifecycle') selectedLifecycleType = "";
+            else if (categoryName === 'profile') selectedProfile = "";
+            else if (categoryName === 'googlePin') selectedGooglePin = "";
+            
+            localStorage.removeItem(`${storageKey}_${currentECU}`);
+        }
+    }
+}
+
+function loadStateForECU() {
+    currentSessionId = localStorage.getItem(`currentSessionId_${currentECU}`) || "";
+    currentSessionVersion = localStorage.getItem(`currentSessionVersion_${currentECU}`) || "";
+    currentSequenceNo = parseInt(localStorage.getItem(`currentSequenceNo_${currentECU}`) || "0");
+    currentSTRCounter = parseInt(localStorage.getItem(`currentSTRCounter_${currentECU}`) || "0");
+    currentClampCounter = parseInt(localStorage.getItem(`currentClampCounter_${currentECU}`) || "0");
+    currentSGRCounter = parseInt(localStorage.getItem(`currentSGRCounter_${currentECU}`) || "0");
+
+    selectedMediaSource = localStorage.getItem(`savedMediaSource_${currentECU}`) || "";
+    selectedLifecycleType = localStorage.getItem(`savedLifecycleType_${currentECU}`) || "";
+    selectedProfile = localStorage.getItem(`savedProfile_${currentECU}`) || "";
+    selectedGooglePin = localStorage.getItem(`savedGooglePin_${currentECU}`) || "";
+
+    document.getElementById("softwareVersion").value = currentSessionVersion;
+}
+
+function selectOption(category, value, buttonElement) {
+    let groupContainer;
+    
+    if (buttonElement.classList.contains('active')) {
+        if (category === 'lifecycle') return; 
+
+        buttonElement.classList.remove('active');
+        if (category === 'media') {
+            selectedMediaSource = "";
+            localStorage.removeItem(`savedMediaSource_${currentECU}`);
+        } else if (category === 'profile') {
+            selectedProfile = "";
+            localStorage.removeItem(`savedProfile_${currentECU}`);
+        } else if (category === 'googlePin') {
+            selectedGooglePin = "";
+            localStorage.removeItem(`savedGooglePin_${currentECU}`);
+        }
+        return; 
+    }
+
+    if (category === 'media') {
+        selectedMediaSource = value;
+        localStorage.setItem(`savedMediaSource_${currentECU}`, value);
+        groupContainer = document.getElementById('mediaSourceGroup');
+    } else if (category === 'lifecycle') {
+        selectedLifecycleType = value;
+        localStorage.setItem(`savedLifecycleType_${currentECU}`, value);
+        groupContainer = document.getElementById('lifecycleTypeGroup');
+    } else if (category === 'profile') {
+        selectedProfile = value;
+        localStorage.setItem(`savedProfile_${currentECU}`, value);
+        groupContainer = document.getElementById('profileGroup');
+    } else if (category === 'googlePin') {
+        selectedGooglePin = value;
+        localStorage.setItem(`savedGooglePin_${currentECU}`, value);
+        groupContainer = document.getElementById('googlePinGroup');
+    }
+
+    const buttons = groupContainer.getElementsByClassName('option-btn');
+    for (let i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('active');
+    }
+    buttonElement.classList.add('active');
+}
+
+function restoreSelectionsForECU() {
+    ['mediaSourceGroup', 'lifecycleTypeGroup', 'profileGroup', 'googlePinGroup'].forEach(id => {
+        const buttons = document.getElementById(id).getElementsByClassName('option-btn');
+        for (let i = 0; i < buttons.length; i++) buttons[i].classList.remove('active');
+    });
+
+    if (selectedMediaSource) {
+        const btn = document.querySelector(`#mediaSourceGroup .option-btn[data-value="${selectedMediaSource}"]`);
+        if (btn) btn.classList.add('active');
+    }
+    if (selectedLifecycleType) {
+        const btn = document.querySelector(`#lifecycleTypeGroup .option-btn[data-value="${selectedLifecycleType}"]`);
+        if (btn) btn.classList.add('active');
+    }
+    if (selectedProfile) {
+        const btn = document.querySelector(`#profileGroup .option-btn[data-value="${selectedProfile}"]`);
+        if (btn) btn.classList.add('active');
+    }
+    if (selectedGooglePin) {
+        const btn = document.querySelector(`#googlePinGroup .option-btn[data-value="${selectedGooglePin}"]`);
+        if (btn) btn.classList.add('active');
+    }
+}
+
+function getFormattedTimestamp() {
+    const now = new Date();
+    const datePart = new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit", month: "short", year: "numeric",
+        hour: "2-digit", minute: "2-digit", second: "2-digit",
+        fractionalSecondDigits: 3, hour12: false
+    }).format(now);
+
+    const tzPart = new Intl.DateTimeFormat("en-US", { timeZoneName: "short" })
+        .formatToParts(now).find(part => part.type === "timeZoneName")?.value || "";
+
+    let timezone = tzPart;
+    const offsetMinutes = -now.getTimezoneOffset();
+
+    if (timezone.startsWith("GMT")) {
+        switch(offsetMinutes){
+            case 60: timezone = "CET"; break;
+            case 120: timezone = "CEST"; break;
+            case 330: timezone = "IST"; break;
+            case 0: timezone = "UTC"; break;
+        }
+    }
+
+    const sign = offsetMinutes >= 0 ? "+" : "-";
+    const hours = String(Math.floor(Math.abs(offsetMinutes) / 60)).padStart(2,"0");
+    const minutes = String(Math.abs(offsetMinutes) % 60).padStart(2,"0");
+
+    return `${datePart} ${timezone} (UTC${sign}${hours}:${minutes})`;
+}
+
+function calculateCounters(lifecycleType){
+    if (lifecycleType === "STR" || lifecycleType === "PWF") { currentSTRCounter++; } 
+    else if (lifecycleType !== "Cancel shutdown") { currentSTRCounter = 0; }
+    
+    if (lifecycleType === "Clamp") { currentClampCounter++; } 
+    else if (lifecycleType !== "Cancel shutdown") { currentClampCounter = 0; }
+    
+    if (lifecycleType === "SGR") { currentSGRCounter++; } 
+    else if (lifecycleType !== "Cancel shutdown") { currentSGRCounter = 0; }
+}
+
+function createNewSession(softwareVersion){
+    currentSessionId = Date.now().toString();
+    currentSessionVersion = softwareVersion;
+    currentSequenceNo = 0;
+    
+    currentSTRCounter = 0;
+    currentClampCounter = 0;
+    currentSGRCounter = 0;
+
+    localStorage.setItem(`currentSessionId_${currentECU}`, currentSessionId);
+    localStorage.setItem(`currentSessionVersion_${currentECU}`, currentSessionVersion);
+    localStorage.setItem(`currentSequenceNo_${currentECU}`, currentSequenceNo);
+    localStorage.setItem(`currentSTRCounter_${currentECU}`, currentSTRCounter);
+    localStorage.setItem(`currentClampCounter_${currentECU}`, currentClampCounter);
+    localStorage.setItem(`currentSGRCounter_${currentECU}`, currentSGRCounter);
+}
+
+function recordTime(){
+    const softwareVersion = document.getElementById("softwareVersion").value.trim();
+    const comment = document.getElementById("comment").value.trim();
+    const mediaSource = selectedMediaSource || "N/A";
+    const lifecycleType = selectedLifecycleType;
+    const profile = selectedProfile || "N/A";
+    const googlePin = selectedGooglePin || "N/A";
+
+    if(!softwareVersion){
+        alert("Please enter Software Version.");
+        return;
+    }
+    if(!lifecycleType){
+        alert("Please select a Lifecycle Type.");
+        return;
+    }
+
+    if(currentSessionVersion !== softwareVersion){
+        createNewSession(softwareVersion);
+    }
+
+    currentSequenceNo++;
+    calculateCounters(lifecycleType);
+
+    const logs = JSON.parse(localStorage.getItem(`timestampLogs_${currentECU}`) || "[]");
+
+    logs.push({
+        ecu: currentECU,
+        sessionId: currentSessionId,
+        softwareVersion: softwareVersion,
+        sequenceNo: currentSequenceNo,
+        strCounter: currentSTRCounter,
+        clampCounter: currentClampCounter,
+        sgrCounter: currentSGRCounter,
+        timestamp: getFormattedTimestamp(),
+        mediaSource: mediaSource,
+        lifecycleType: lifecycleType,
+        profile: profile,
+        googlePin: googlePin,
+        comment: comment
+    });
+
+    localStorage.setItem(`timestampLogs_${currentECU}`, JSON.stringify(logs));
+    localStorage.setItem(`currentSequenceNo_${currentECU}`, currentSequenceNo);
+    localStorage.setItem(`currentSTRCounter_${currentECU}`, currentSTRCounter);
+    localStorage.setItem(`currentClampCounter_${currentECU}`, currentClampCounter);
+    localStorage.setItem(`currentSGRCounter_${currentECU}`, currentSGRCounter);
+
+    updateCounterDisplays();
+    document.getElementById("comment").value = "";
+    displayLogs();
+}
+
+function deleteLog(indexToDel) {
+    if (!confirm(`Are you sure you want to delete this specific log entry for ${currentECU}?`)) return;
+    
+    let logs = JSON.parse(localStorage.getItem(`timestampLogs_${currentECU}`) || "[]");
+    
+    logs.splice(indexToDel, 1);
+    localStorage.setItem(`timestampLogs_${currentECU}`, JSON.stringify(logs));
+    
+    if (logs.length > 0) {
+        const lastLog = logs[logs.length - 1];
+        currentSessionId = lastLog.sessionId;
+        currentSessionVersion = lastLog.softwareVersion;
+        currentSequenceNo = lastLog.sequenceNo;
+        currentSTRCounter = lastLog.strCounter;
+        currentClampCounter = lastLog.clampCounter;
+        currentSGRCounter = lastLog.sgrCounter;
+    } else {
+        currentSessionId = "";
+        currentSessionVersion = "";
+        currentSequenceNo = 0;
+        currentSTRCounter = 0;
+        currentClampCounter = 0;
+        currentSGRCounter = 0;
+    }
+    
+    localStorage.setItem(`currentSessionId_${currentECU}`, currentSessionId);
+    localStorage.setItem(`currentSessionVersion_${currentECU}`, currentSessionVersion);
+    localStorage.setItem(`currentSequenceNo_${currentECU}`, currentSequenceNo);
+    localStorage.setItem(`currentSTRCounter_${currentECU}`, currentSTRCounter);
+    localStorage.setItem(`currentClampCounter_${currentECU}`, currentClampCounter);
+    localStorage.setItem(`currentSGRCounter_${currentECU}`, currentSGRCounter);
+    
+    displayLogs();
+    updateCounterDisplays();
+}
+
+function updateCounterDisplays() {
+    const strCard = document.getElementById("strCounterCard");
+    const clampCard = document.getElementById("clampCounterCard");
+    const sgrCard = document.getElementById("sgrCounterCard");
+    
+    const strLabel = currentECU === 'RSE' ? 'PWF' : 'STR';
+    const strIcon = currentECU === 'RSE' ? 'fa-power-off' : 'fa-clock-rotate-left';
+
+    document.getElementById("strCounterLabel").innerHTML = `<i class="fa-solid ${strIcon}"></i> ${strLabel}:`;
+    document.getElementById("strCounterVal").innerText = currentSTRCounter;
+    
+    document.getElementById("clampCounterVal").innerText = currentClampCounter;
+    document.getElementById("sgrCounterVal").innerText = currentSGRCounter;
+
+    [strCard, clampCard, sgrCard].forEach(card => {
+        card.style.transform = "scale(1.05)";
+        setTimeout(() => { card.style.transform = "scale(1)"; }, 200);
+    });
+}
+
+function displayLogs(){
+    const logs = JSON.parse(localStorage.getItem(`timestampLogs_${currentECU}`) || "[]");
+    const logsDiv = document.getElementById("logs");
+    
+    const reversedLogs = [...logs].reverse();
+    logsDiv.innerHTML = "";
+    
+    if (reversedLogs.length === 0) {
+        logsDiv.innerHTML = `<div style="text-align:center; padding: 80px 20px; color: #94a3b8;">
+            <i class="fa-regular fa-folder-open" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i><br>
+            <span style="font-size: 16px; font-weight: 500;">No logs recorded yet for ${currentECU}.</span>
+        </div>`;
+        return;
+    }
+
+    let lastSessionId = "";
+
+    reversedLogs.forEach((log, reversedIndex) => {
+        const originalIndex = logs.length - 1 - reversedIndex;
+
+        if(log.sessionId !== lastSessionId){
+            lastSessionId = log.sessionId;
+            logsDiv.innerHTML += `
+                <div class="session-badge">
+                    <i class="fa-solid fa-code-branch"></i> Version ${log.softwareVersion}
+                </div>
+            `;
+        }
+
+        let commentHTML = log.comment ? `<div class="log-comment"><i class="fa-regular fa-comment-dots" style="color: #64748b; margin-right:5px;"></i> ${log.comment}</div>` : '';
+        
+        let counterTagHTML = '';
+        if (log.lifecycleType === 'STR' || log.lifecycleType === 'PWF') {
+            const icon = log.lifecycleType === 'STR' ? 'fa-clock-rotate-left' : 'fa-power-off';
+            counterTagHTML = `<span class="tag tag-str"><i class="fa-solid ${icon}"></i> ${log.lifecycleType}: ${log.strCounter}</span>`;
+        }
+        if (log.lifecycleType === 'Clamp') counterTagHTML = `<span class="tag tag-clamp"><i class="fa-solid fa-plug"></i> Clamp: ${log.clampCounter}</span>`;
+        if (log.lifecycleType === 'SGR') counterTagHTML = `<span class="tag tag-sgr"><i class="fa-solid fa-microchip"></i> SGR: ${log.sgrCounter}</span>`;
+
+        let profileTag = log.profile && log.profile !== 'N/A' ? `<span class="tag tag-profile"><i class="fa-solid fa-user"></i> ${log.profile}</span>` : '';
+        let pinTagClass = log.googlePin === 'Enabled' ? 'tag-pin-enabled' : 'tag-pin-disabled';
+        let pinIcon = log.googlePin === 'Enabled' ? 'fa-lock' : 'fa-lock-open';
+        let pinTag = log.googlePin && log.googlePin !== 'N/A' ? `<span class="tag ${pinTagClass}"><i class="fa-solid ${pinIcon}"></i> PIN: ${log.googlePin}</span>` : '';
+
+        let ecuIcon = "fa-microchip";
+        if (log.ecu === "IDCevo") ecuIcon = "fa-gauge-high";
+        else if (log.ecu === "RSE") ecuIcon = "fa-car-rear";
+        else if (log.ecu === "CDE") ecuIcon = "fa-display";
+
+        logsDiv.innerHTML += `
+            <div class="log-card">
+                <div class="log-header">
+                    <div style="display:flex; align-items:center; gap: 15px;">
+                        <span class="log-seq">Entry #${log.sequenceNo}</span>
+                        <span class="log-time"><i class="fa-regular fa-clock"></i> ${log.timestamp}</span>
+                    </div>
+                    <button class="delete-log-btn" onclick="deleteLog(${originalIndex})" title="Delete this entry">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+                <div class="log-tags">
+                    <span class="tag tag-ecu"><i class="fa-solid ${ecuIcon}"></i> ${log.ecu}</span>
+                    <span class="tag tag-lifecycle"><i class="fa-solid fa-tag"></i> ${log.lifecycleType}</span>
+                    ${log.mediaSource !== 'N/A' ? `<span class="tag tag-media"><i class="fa-solid fa-play"></i> ${log.mediaSource}</span>` : ''}
+                    ${profileTag}
+                    ${pinTag}
+                    ${counterTagHTML}
+                </div>
+                ${commentHTML}
+            </div>
+        `;
+    });
+}
+
+function exportLogs(format){
+    const logs = JSON.parse(localStorage.getItem(`timestampLogs_${currentECU}`) || "[]");
+
+    if(logs.length === 0){
+        alert(`No logs available to export for ${currentECU}.`);
+        return;
+    }
+
+    const totalSTR = logs.filter(l => l.lifecycleType === 'STR' || l.lifecycleType === 'PWF').length;
+    const totalClamp = logs.filter(l => l.lifecycleType === 'Clamp').length;
+    const totalSGR = logs.filter(l => l.lifecycleType === 'SGR').length;
+    
+    const exportSoftVer = currentSessionVersion ? currentSessionVersion.replace(/[\/\\?%*:|"<> ]/g, '-') : 'Unknown_Version';
+
+    const strLabel = currentECU === 'RSE' ? 'PWF' : 'STR';
+
+    if (format === 'csv') {
+        let csv = `REPORT SUMMARY - ECU: ${currentECU}\n`;
+        csv += `Total ${strLabel} Executed:,${totalSTR}\n`;
+        csv += `Total Clamps Executed:,${totalClamp}\n`;
+        csv += `Total SGR Executed:,${totalSGR}\n\n`;
+        
+        csv += `ECU,Software Version,Session ID,SL No,Timestamp,Media Source,Lifecycle Type,Profile,Google Pin,${strLabel} Counter,Clamp Counter,SGR Counter,Comment\n`;
+
+        logs.forEach(log => {
+            csv += 
+                `"${log.ecu}",` +
+                `"${log.softwareVersion}",` +
+                `"${log.sessionId}",` +
+                `"${log.sequenceNo}",` +
+                `"${log.timestamp}",` +
+                `"${log.mediaSource}",` +
+                `"${log.lifecycleType}",` +
+                `"${log.profile || "N/A"}",` +
+                `"${log.googlePin || "N/A"}",` +
+                `"${log.strCounter}",` +
+                `"${log.clampCounter}",` +
+                `"${log.sgrCounter}",` +
+                `"${(log.comment || "").replace(/"/g,'""')}"\n`;
+        });
+
+        downloadFile(csv, `${currentECU}_${exportSoftVer}.csv`, 'text/csv;charset=utf-8;');
+    
+    } else if (format === 'html') {
+        let htmlRows = logs.map(log => `
+            <tr>
+                <td style="color:#0f172a; font-weight: 500;">${log.softwareVersion}</td>
+                <td><strong>${log.sequenceNo}</strong></td>
+                <td style="color:#64748b; font-size:13px;">${log.timestamp}</td>
+                <td style="color:#475569;">${log.mediaSource}</td>
+                <td><span style="background:#eff6ff; border: 1px solid #bfdbfe; color:#1d4ed8; padding:4px 8px; border-radius:6px; font-weight:600;">${log.lifecycleType}</span></td>
+                <td style="color:#6b21a8; font-size:13.5px;">${log.profile || '-'}</td>
+                <td style="color:${log.googlePin === 'Enabled' ? '#166534' : '#991b1b'}; font-size:13.5px;">${log.googlePin || '-'}</td>
+                <td style="text-align:center; color:#2563eb; font-weight:600;">${log.strCounter || '-'}</td>
+                <td style="text-align:center; color:#ea580c; font-weight:600;">${log.clampCounter || '-'}</td>
+                <td style="text-align:center; color:#059669; font-weight:600;">${log.sgrCounter || '-'}</td>
+                <td style="color:#64748b; font-style:italic;">${log.comment || ''}</td>
+            </tr>
+        `).join('');
+
+        let htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>T.R.A.C.K. Report - ${currentECU}</title>
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+                <style>
+                    body { font-family: 'Inter', sans-serif; padding: 40px; color: #1e293b; background: #f8fafc; }
+                    .header { text-align: center; margin-bottom: 40px; }
+                    h1 { color: #0f172a; font-weight: 800; font-size: 32px; margin-bottom: 5px; }
+                    .subtitle { color: #64748b; font-size: 15px; font-weight: 500; margin-bottom: 15px; }
+                    .date { color: #94a3b8; font-size: 13px; font-weight: 500; }
+                    
+                    .summary { display: flex; gap: 20px; margin-bottom: 40px; justify-content: center; }
+                    .stat { background: #ffffff; padding: 20px 30px; border-radius: 16px; border: 1px solid #e2e8f0; font-size: 15px; color:#475569; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); text-align:center; min-width: 150px; }
+                    .stat strong { font-size: 32px; display: block; margin-top: 8px; color: #0f172a; }
+                    
+                    .table-wrapper { background: #ffffff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; overflow-x: auto; }
+                    table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+                    th, td { border-bottom: 1px solid #e2e8f0; padding: 16px 12px; text-align: left; font-size: 14px; }
+                    th { color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+                    tr:last-child td { border-bottom: none; }
+                    tr:hover { background-color: #f1f5f9; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>T.R.A.C.K. Report</h1>
+                    <div class="subtitle">Timestamp Recording & Automotive Capture Kit - <strong>ECU: ${currentECU}</strong></div>
+                    <div class="date">Generated on: ${new Date().toLocaleString()}</div>
+                </div>
+                
+                <div class="summary">
+                    <div class="stat">Total ${strLabel}<br><strong style="color:#2563eb;">${totalSTR}</strong></div>
+                    <div class="stat">Total Clamp<br><strong style="color:#ea580c;">${totalClamp}</strong></div>
+                    <div class="stat">Total SGR<br><strong style="color:#059669;">${totalSGR}</strong></div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Version</th>
+                                <th>Seq #</th>
+                                <th>Timestamp</th>
+                                <th>Media Source</th>
+                                <th>Lifecycle</th>
+                                <th>Profile</th>
+                                <th>Google Pin</th>
+                                <th style="text-align:center;">${strLabel}</th>
+                                <th style="text-align:center;">Clamp</th>
+                                <th style="text-align:center;">SGR</th>
+                                <th>Comment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${htmlRows}
+                        </tbody>
+                    </table>
+                </div>
+            </body>
+            </html>
+        `;
+
+        downloadFile(htmlContent, `${currentECU}_${exportSoftVer}.html`, 'text/html;charset=utf-8;');
+    }
+}
+
+function downloadFile(content, fileName, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function clearLogs(){
+    if(confirm(`Are you sure you want to delete all logs and reset the dashboard for ECU: ${currentECU}? Data for other ECUs will not be affected.`)){
+        
+        localStorage.removeItem(`timestampLogs_${currentECU}`);
+        localStorage.removeItem(`currentSessionId_${currentECU}`);
+        localStorage.removeItem(`currentSessionVersion_${currentECU}`);
+        localStorage.removeItem(`currentSequenceNo_${currentECU}`);
+        localStorage.removeItem(`currentSTRCounter_${currentECU}`);
+        localStorage.removeItem(`currentClampCounter_${currentECU}`);
+        localStorage.removeItem(`currentSGRCounter_${currentECU}`);
+        
+        localStorage.removeItem(`savedMediaSource_${currentECU}`);
+        localStorage.removeItem(`savedLifecycleType_${currentECU}`);
+        localStorage.removeItem(`savedProfile_${currentECU}`);
+        localStorage.removeItem(`savedGooglePin_${currentECU}`);
+        
+        loadStateForECU();
+        
+        document.querySelectorAll('.selection-group:not(#ecuGroup) .option-btn').forEach(btn => btn.classList.remove('active'));
+
+        displayLogs();
+        updateCounterDisplays();
+    }
+}
+</script>
+
+</body>
+</html>
